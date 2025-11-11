@@ -41,6 +41,12 @@ const isAdmin = async (ctx) => {
   }
 };
 
+// Check if user is authorized admin for /setapi
+const isAuthorizedAdmin = (userId) => {
+  const adminIds = process.env.ADMIN_IDS?.split(',').map(id => id.trim()) || [];
+  return adminIds.includes(userId.toString());
+};
+
 // Welcome new members
 bot.on('new_chat_members', async (ctx) => {
   const newMembers = ctx.message.new_chat_members;
@@ -115,9 +121,9 @@ bot.command('unban', async (ctx) => {
   }
 });
 
-// Set API key command (admin only)
+// Set API key command (authorized admin only)
 bot.command('setapi', async (ctx) => {
-  if (!(await isAdmin(ctx))) {
+  if (!isAuthorizedAdmin(ctx.from.id)) {
     return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
   }
 
@@ -137,7 +143,14 @@ bot.command('setapi', async (ctx) => {
     const data = await loadData();
     data[userId] = { apiKey };
     await saveData(data);
-    await ctx.reply(`Đã set API key cho user ID: ${userId}`, { parse_mode: 'HTML' });
+    await ctx.reply(`Đã set API Seller cho user ID: ${userId}`, { parse_mode: 'HTML' });
+    
+    // Delete the command message to hide the API key
+    try {
+      await ctx.deleteMessage(ctx.message.message_id);
+    } catch (deleteError) {
+      console.log('Could not delete message (bot may not have delete permissions):', deleteError.message);
+    }
   } catch (error) {
     console.error('Error saving API key:', error);
     await ctx.reply('Không thể lưu API key.', { parse_mode: 'HTML' });
@@ -151,7 +164,7 @@ bot.command('help', (ctx) => {
 /ban - Ban người dùng (reply tin nhắn)
 /kick - Kick người dùng (reply tin nhắn)
 /unban - Unban người dùng (reply tin nhắn)
-/setapi [key] - Set API key cho user (reply tin nhắn)`, { parse_mode: 'HTML' });
+/setapi [key] - Set API key cho user (reply tin nhắn, chỉ admin được phép)`, { parse_mode: 'HTML' });
 });
 
 // Start command

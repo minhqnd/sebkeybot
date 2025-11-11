@@ -9,6 +9,7 @@ Bot Telegram quản lý nhóm sử dụng Telegraf.
 3. Tạo file `.env` và thêm token bot của bạn:
    ```
    TELEGRAM_BOT_TOKEN=your_bot_token_here
+   ADMIN_IDS=your_admin_id1,your_admin_id2
    ```
 4. Chạy `pnpm start` để khởi động bot.
 
@@ -19,7 +20,7 @@ Bot Telegram quản lý nhóm sử dụng Telegraf.
 - `/ban` - Ban người dùng (reply tin nhắn của họ)
 - `/kick` - Kick người dùng (reply tin nhắn của họ)
 - `/unban` - Unban người dùng (reply tin nhắn của họ)
-- `/setapi [key]` - Set API key cho user (reply tin nhắn của họ, chỉ admin)
+- `/setapi [key]` - Set API key cho user (reply tin nhắn của họ, chỉ admin trong ADMIN_IDS, tin nhắn lệnh sẽ bị xóa)
 
 ## Yêu cầu
 
