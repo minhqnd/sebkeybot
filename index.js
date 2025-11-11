@@ -243,6 +243,18 @@ bot.catch((err, ctx) => {
   ctx.reply('Có lỗi xảy ra. Vui lòng thử lại sau.', { parse_mode: 'HTML' });
 });
 
+// Set bot commands for suggestions
+bot.telegram.setMyCommands([
+  { command: 'start', description: 'Khởi động bot' },
+  { command: 'help', description: 'Hiển thị trợ giúp' },
+  // { command: 'ban', description: 'Ban người dùng (reply tin nhắn)' },
+  // { command: 'kick', description: 'Kick người dùng (reply tin nhắn)' },
+  // { command: 'unban', description: 'Unban người dùng (reply tin nhắn)' },
+  { command: 'setapi', description: 'Set API key cho user (chỉ admin)' },
+  { command: 'key', description: 'Tạo activation key [số ngày|ky]' },
+  { command: 'check', description: 'Kiểm tra activation key [key]' }
+]);
+
 // Launch the bot
 bot.launch();
 console.log('Bot đã khởi động!');
