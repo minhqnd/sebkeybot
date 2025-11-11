@@ -19,6 +19,7 @@ Bot Telegram quản lý nhóm sử dụng Telegraf.
 - `/ban` - Ban người dùng (reply tin nhắn của họ)
 - `/kick` - Kick người dùng (reply tin nhắn của họ)
 - `/unban` - Unban người dùng (reply tin nhắn của họ)
+- `/setapi [key]` - Set API key cho user (reply tin nhắn của họ, chỉ admin)
 
 ## Yêu cầu
 

@@ -115,13 +115,43 @@ bot.command('unban', async (ctx) => {
   }
 });
 
+// Set API key command (admin only)
+bot.command('setapi', async (ctx) => {
+  if (!(await isAdmin(ctx))) {
+    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
+  }
+
+  const args = ctx.message.text.split(' ').slice(1);
+  const apiKey = args.join(' ');
+  const userId = ctx.message.reply_to_message?.from?.id;
+
+  if (!userId) {
+    return ctx.reply('Hãy reply tin nhắn của người cần set API key.', { parse_mode: 'HTML' });
+  }
+
+  if (!apiKey) {
+    return ctx.reply('Hãy cung cấp API key sau lệnh /setapi.', { parse_mode: 'HTML' });
+  }
+
+  try {
+    const data = await loadData();
+    data[userId] = { apiKey };
+    await saveData(data);
+    await ctx.reply(`Đã set API key cho user ID: ${userId}`, { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error saving API key:', error);
+    await ctx.reply('Không thể lưu API key.', { parse_mode: 'HTML' });
+  }
+});
+
 // Help command
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
 /help - Hiển thị trợ giúp
 /ban - Ban người dùng (reply tin nhắn)
 /kick - Kick người dùng (reply tin nhắn)
-/unban - Unban người dùng (reply tin nhắn)`, { parse_mode: 'HTML' });
+/unban - Unban người dùng (reply tin nhắn)
+/setapi [key] - Set API key cho user (reply tin nhắn)`, { parse_mode: 'HTML' });
 });
 
 // Start command

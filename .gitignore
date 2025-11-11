@@ -12,6 +12,9 @@ pnpm-debug.log*
 .env.test.local
 .env.production.local
 
+# Data files
+data.json
+
 # Logs
 logs
 *.log
