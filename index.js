@@ -12,6 +12,10 @@ const {
   handleUnpin,
   handleInfo,
   handleHelp,
+  handleSetApiKey,
+  handleCreateKey,
+  handleSellerStats,
+  handleMyKeys,
 } = require('./handlers');
 
 const bot = new Telegraf(BOT_TOKEN);
@@ -37,6 +41,10 @@ bot.command('pin', handlePin);
 bot.command('unpin', handleUnpin);
 bot.command('info', handleInfo);
 bot.command('help', handleHelp);
+bot.command('setapikey', handleSetApiKey);
+bot.command('createkey', handleCreateKey);
+bot.command('sellerstats', handleSellerStats);
+bot.command('mykeys', handleMyKeys);
 
 // Xử lý lỗi
 bot.catch((err, ctx) => {
