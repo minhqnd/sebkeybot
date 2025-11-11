@@ -1,26 +1,17 @@
 {
-  "name": "telegram-group-bot",
+  "name": "sebkeybot",
   "version": "1.0.0",
-  "description": "A Telegram bot for group management using Telegraf",
+  "description": "Telegram bot for group management using Telegraf",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "node --watch index.js"
   },
-  "keywords": [
-    "telegram",
-    "bot",
-    "telegraf",
-    "group-management"
-  ],
+  "keywords": ["telegram", "bot", "telegraf", "group-management"],
   "author": "",
-  "license": "MIT",
+  "license": "ISC",
   "dependencies": {
-    "axios": "^1.13.2",
-    "dotenv": "^16.3.1",
-    "telegraf": "^4.15.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+    "telegraf": "^4.16.3",
+    "dotenv": "^16.4.5"
   }
 }

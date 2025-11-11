@@ -1,61 +1,142 @@
+require('dotenv').config();
 const { Telegraf } = require('telegraf');
-const { BOT_TOKEN } = require('./config');
-const { spamDetectionMiddleware, messageLoggingMiddleware } = require('./middlewares');
-const {
-  handleNewChatMembers,
-  handleLeftChatMember,
-  handleKick,
-  handleBan,
-  handleMute,
-  handleUnmute,
-  handlePin,
-  handleUnpin,
-  handleInfo,
-  handleHelp,
-  handleSetApiKey,
-  handleCreateKey,
-  handleSellerStats,
-  handleMyKeys,
-} = require('./handlers');
+const fs = require('fs').promises;
 
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-// Sử dụng middleware log tin nhắn
-bot.use(messageLoggingMiddleware);
+// Load data from data.json
+const loadData = async () => {
+  try {
+    const data = await fs.readFile('data.json', 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    return {}; // Return empty object if file doesn't exist
+  }
+};
 
-// Sử dụng middleware phát hiện spam
-bot.use(spamDetectionMiddleware);
+// Save data to data.json
+const saveData = async (data) => {
+  await fs.writeFile('data.json', JSON.stringify(data, null, 2));
+};
 
-// Sự kiện chào mừng thành viên mới
-bot.on('new_chat_members', handleNewChatMembers);
+// Middleware to log messages
+bot.use((ctx, next) => {
+  if (ctx.message) {
+    const user = ctx.from;
+    const chat = ctx.chat;
+    const messageText = ctx.message.text || '[Non-text message]';
+    console.log(`[${new Date().toISOString()}] User: ${user.first_name} (@${user.username || 'unknown'}) ID: ${user.id} in Chat: ${chat.title || chat.type} (${chat.id}) - Message: ${messageText}`);
+  }
+  return next();
+});
 
-// Sự kiện tiễn thành viên rời nhóm
-bot.on('left_chat_member', handleLeftChatMember);
+// Middleware to check if user is admin
+const isAdmin = async (ctx) => {
+  try {
+    const member = await ctx.getChatMember(ctx.from.id);
+    return member.status === 'administrator' || member.status === 'creator';
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+};
 
-// Các lệnh
-bot.command('kick', handleKick);
-bot.command('ban', handleBan);
-bot.command('mute', handleMute);
-bot.command('unmute', handleUnmute);
-bot.command('pin', handlePin);
-bot.command('unpin', handleUnpin);
-bot.command('info', handleInfo);
-bot.command('help', handleHelp);
-bot.command('setapikey', handleSetApiKey);
-bot.command('createkey', handleCreateKey);
-bot.command('sellerstats', handleSellerStats);
-bot.command('mykeys', handleMyKeys);
+// Welcome new members
+bot.on('new_chat_members', async (ctx) => {
+  const newMembers = ctx.message.new_chat_members;
+  for (const member of newMembers) {
+    await ctx.reply(`Chào mừng <b>${member.first_name}</b> đến với nhóm! 🎉`, { parse_mode: 'HTML' });
+  }
+});
 
-// Xử lý lỗi
+// Goodbye message for left members
+bot.on('left_chat_member', async (ctx) => {
+  const leftMember = ctx.message.left_chat_member;
+  await ctx.reply(`<b>${leftMember.first_name}</b> đã rời khỏi nhóm. 😢`, { parse_mode: 'HTML' });
+});
+
+// Ban command (admin only)
+bot.command('ban', async (ctx) => {
+  if (!(await isAdmin(ctx))) {
+    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
+  }
+
+  const userId = ctx.message.reply_to_message?.from?.id;
+  if (!userId) {
+    return ctx.reply('Hãy reply tin nhắn của người cần ban.', { parse_mode: 'HTML' });
+  }
+
+  try {
+    await ctx.banChatMember(userId);
+    await ctx.reply('Đã ban người dùng.', { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error banning user:', error);
+    await ctx.reply('Không thể ban người dùng này.', { parse_mode: 'HTML' });
+  }
+});
+
+// Kick command (admin only)
+bot.command('kick', async (ctx) => {
+  if (!(await isAdmin(ctx))) {
+    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
+  }
+
+  const userId = ctx.message.reply_to_message?.from?.id;
+  if (!userId) {
+    return ctx.reply('Hãy reply tin nhắn của người cần kick.', { parse_mode: 'HTML' });
+  }
+
+  try {
+    await ctx.kickChatMember(userId);
+    await ctx.reply('Đã kick người dùng.', { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error kicking user:', error);
+    await ctx.reply('Không thể kick người dùng này.', { parse_mode: 'HTML' });
+  }
+});
+
+// Unban command (admin only)
+bot.command('unban', async (ctx) => {
+  if (!(await isAdmin(ctx))) {
+    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
+  }
+
+  const userId = ctx.message.reply_to_message?.from?.id;
+  if (!userId) {
+    return ctx.reply('Hãy reply tin nhắn của người cần unban.', { parse_mode: 'HTML' });
+  }
+
+  try {
+    await ctx.unbanChatMember(userId);
+    await ctx.reply('Đã unban người dùng.', { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error unbanning user:', error);
+    await ctx.reply('Không thể unban người dùng này.', { parse_mode: 'HTML' });
+  }
+});
+
+// Help command
+bot.command('help', (ctx) => {
+  ctx.reply(`<b>Các lệnh có sẵn:</b>
+/help - Hiển thị trợ giúp
+/ban - Ban người dùng (reply tin nhắn)
+/kick - Kick người dùng (reply tin nhắn)
+/unban - Unban người dùng (reply tin nhắn)`, { parse_mode: 'HTML' });
+});
+
+// Start command
+bot.start((ctx) => {
+  ctx.reply('<b>Bot quản lý nhóm đã sẵn sàng!</b> Sử dụng /help để xem các lệnh.', { parse_mode: 'HTML' });
+});
+
+// Error handling
 bot.catch((err, ctx) => {
   console.error('Bot error:', err);
-  ctx.reply('Có lỗi xảy ra. Vui lòng thử lại sau.');
+  ctx.reply('Có lỗi xảy ra. Vui lòng thử lại sau.', { parse_mode: 'HTML' });
 });
 
-// Khởi động bot
-bot.launch({
-  dropPendingUpdates: true,
-});
+// Launch the bot
+bot.launch();
 console.log('Bot đã khởi động!');
 
 // Graceful shutdown
