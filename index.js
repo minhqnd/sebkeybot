@@ -1,8 +1,10 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const fs = require('fs').promises;
+const KeyManager = require('./modules/keyManager');
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+const keyManager = new KeyManager(process.env.SECRET);
 
 // Load data from data.json
 const loadData = async () => {
@@ -160,6 +162,64 @@ bot.command('setapi', async (ctx) => {
   }
 });
 
+// Create activation key command
+bot.command('key', async (ctx) => {
+  console.log(`Channel check: ctx.chat.id=${ctx.chat.id}, CHANNEL_ID=${process.env.CHANNEL_ID}`);
+  // Check if command is used in the allowed channel
+  if (ctx.chat.id.toString() !== process.env.CHANNEL_ID?.toString()) {
+    console.log('Command blocked: not in allowed channel');
+    return ctx.reply('Lệnh này chỉ có thể sử dụng trong channel được chỉ định.', { parse_mode: 'HTML' });
+  }
+  console.log('Command allowed: in allowed channel');
+
+  const userId = ctx.from.id;
+  const username = ctx.from.username || 'unknown';
+  const args = ctx.message.text.split(' ').slice(1);
+
+  try {
+    // Load user data to get API key
+    const data = await loadData();
+    const userData = data[userId];
+
+    if (!userData || !userData.apiKey) {
+      return ctx.reply('Bạn chưa có API key. Hãy liên hệ admin để set API key.', { parse_mode: 'HTML' });
+    }
+
+    const result = await keyManager.createKey(userData.apiKey, userId, username, args);
+
+    // Send masked key to server
+    const serverMessage = keyManager.formatServerMessage(result);
+    await ctx.reply(serverMessage, { parse_mode: 'HTML' });
+
+    // Send full key to user privately
+    const userMessage = keyManager.formatUserMessage(result);
+    await ctx.telegram.sendMessage(userId, userMessage, { parse_mode: 'HTML' });
+
+  } catch (error) {
+    console.error('Error creating key:', error);
+    await ctx.reply(`Không thể tạo key: ${error.message}`, { parse_mode: 'HTML' });
+  }
+});
+
+// Check activation key command
+bot.command('check', async (ctx) => {
+  const args = ctx.message.text.split(' ').slice(1);
+  const keyCode = args.join(' ');
+
+  if (!keyCode) {
+    return ctx.reply('Hãy cung cấp key code để kiểm tra. Ví dụ: /check ABC123', { parse_mode: 'HTML' });
+  }
+
+  try {
+    const result = await keyManager.checkKey(keyCode);
+    const message = keyManager.formatCheckMessage(result);
+    await ctx.reply(message, { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error checking key:', error);
+    await ctx.reply(`Không thể kiểm tra key: ${error.message}`, { parse_mode: 'HTML' });
+  }
+});
+
 // Help command
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
@@ -167,7 +227,9 @@ bot.command('help', (ctx) => {
 /ban - Ban người dùng (reply tin nhắn)
 /kick - Kick người dùng (reply tin nhắn)
 /unban - Unban người dùng (reply tin nhắn)
-/setapi [key] - Set API key cho user (reply tin nhắn, chỉ admin được phép)`, { parse_mode: 'HTML' });
+/setapi [key] - Set API key cho user (reply tin nhắn, chỉ admin được phép)
+/key [số ngày|ky] - Tạo activation key
+/check [key] - Kiểm tra activation key`, { parse_mode: 'HTML' });
 });
 
 // Start command
