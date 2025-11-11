@@ -143,7 +143,10 @@ bot.command('setapi', async (ctx) => {
     const data = await loadData();
     data[userId] = { apiKey };
     await saveData(data);
-    await ctx.reply(`Đã set API Seller cho user ID: ${userId}`, { parse_mode: 'HTML' });
+    
+    const username = ctx.message.reply_to_message.from.username || 'unknown';
+    const maskedKey = apiKey.length > 8 ? `${apiKey.slice(0, 4)}****${apiKey.slice(-4)}` : '****';
+    await ctx.reply(`Đã set API key cho <b>@${username}</b> (ID: ${userId})\nKey: <code>${maskedKey}</code>`, { parse_mode: 'HTML' });
     
     // Delete the command message to hide the API key
     try {
