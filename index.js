@@ -1,25 +1,9 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
-const fs = require('fs').promises;
 const KeyManager = require('./modules/keyManager');
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 const keyManager = new KeyManager(process.env.SECRET);
-
-// Load data from data.json
-const loadData = async () => {
-  try {
-    const data = await fs.readFile('data.json', 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    return {}; // Return empty object if file doesn't exist
-  }
-};
-
-// Save data to data.json
-const saveData = async (data) => {
-  await fs.writeFile('data.json', JSON.stringify(data, null, 2));
-};
 
 // Middleware to log messages
 bot.use((ctx, next) => {
@@ -43,7 +27,7 @@ const isAdmin = async (ctx) => {
   }
 };
 
-// Check if user is authorized admin for /setapi
+// Check if user is authorized admin
 const isAuthorizedAdmin = (userId) => {
   const adminIds = process.env.ADMIN_IDS?.split(',').map(id => id.trim()) || [];
   return adminIds.includes(userId.toString());
@@ -168,45 +152,6 @@ bot.command('clear', async (ctx) => {
   }
 });
 
-// Set API key command (authorized admin only)
-bot.command('setapi', async (ctx) => {
-  if (!isAuthorizedAdmin(ctx.from.id)) {
-    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
-  }
-
-  const args = ctx.message.text.split(' ').slice(1);
-  const apiKey = args.join(' ');
-  const userId = ctx.message.reply_to_message?.from?.id;
-
-  if (!userId) {
-    return ctx.reply('Hãy reply tin nhắn của người cần set API key.', { parse_mode: 'HTML' });
-  }
-
-  if (!apiKey) {
-    return ctx.reply('Hãy cung cấp API key sau lệnh /setapi.', { parse_mode: 'HTML' });
-  }
-
-  try {
-    const data = await loadData();
-    data[userId] = { apiKey };
-    await saveData(data);
-    
-    const username = ctx.message.reply_to_message.from.username || 'unknown';
-    const maskedKey = apiKey.length > 8 ? `${apiKey.slice(0, 4)}****${apiKey.slice(-4)}` : '****';
-    await ctx.reply(`Đã set API key cho <b>@${username}</b> (ID: ${userId})\nKey: <code>${maskedKey}</code>`, { parse_mode: 'HTML' });
-    
-    // Delete the command message to hide the API key
-    try {
-      await ctx.deleteMessage(ctx.message.message_id);
-    } catch (deleteError) {
-      console.log('Could not delete message (bot may not have delete permissions):', deleteError.message);
-    }
-  } catch (error) {
-    console.error('Error saving API key:', error);
-    await ctx.reply('Không thể lưu API key.', { parse_mode: 'HTML' });
-  }
-});
-
 // Create activation key command
 bot.command('key', async (ctx) => {
   console.log(`Channel check: ctx.chat.id=${ctx.chat.id}, CHANNEL_ID=${process.env.CHANNEL_ID}`);
@@ -222,15 +167,7 @@ bot.command('key', async (ctx) => {
   const args = ctx.message.text.split(' ').slice(1);
 
   try {
-    // Load user data to get API key
-    const data = await loadData();
-    const userData = data[userId];
-
-    if (!userData || !userData.apiKey) {
-      return ctx.reply('Bạn chưa có API key. Hãy liên hệ admin để set API key.', { parse_mode: 'HTML' });
-    }
-
-    const result = await keyManager.createKey(userData.apiKey, userId, username, args, ctx.from.first_name);
+    const result = await keyManager.createKey(userId.toString(), userId, username, args, ctx.from.first_name);
 
     // Send masked key to server
     const serverMessage = keyManager.formatServerMessage(result);
@@ -328,7 +265,6 @@ bot.command('statistic', async (ctx) => {
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
 /help - Hiển thị trợ giúp
-/setapi [key] - Set API key cho user (reply tin nhắn, chỉ admin được phép)
 /key [số ngày|ky] - Tạo activation key
 /check [key] - Kiểm tra activation key`, { parse_mode: 'HTML' });
 });
@@ -359,7 +295,6 @@ bot.telegram.setMyCommands([
   // { command: 'kick', description: 'Kick người dùng (reply tin nhắn)' },
   // { command: 'unban', description: 'Unban người dùng (reply tin nhắn)' },
   // { command: 'clear', description: 'Xóa tin nhắn [số lượng]' },
-  // { command: 'setapi', description: 'Set API key cho user (chỉ admin)' },
   { command: 'key', description: 'Tạo activation key [số ngày|ky]' },
   { command: 'check', description: 'Kiểm tra activation key [key]' },
   // { command: 'statistic', description: 'Lấy thống kê keys [days seller_id]' }
