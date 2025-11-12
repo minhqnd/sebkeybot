@@ -301,7 +301,7 @@ bot.command('info', async (ctx) => {
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
 /help - Hiển thị trợ giúp
-/info - Lấy thông tin user (reply hoặc @yourusername)
+/info - Lấy thông tin user
 /key [số ngày|ky] - Tạo activation key
 /checkkey [key] - Kiểm tra activation key
 /checkuser [email] - Kiểm tra user`, { parse_mode: 'HTML' });
