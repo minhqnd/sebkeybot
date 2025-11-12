@@ -358,11 +358,11 @@ bot.telegram.setMyCommands([
   // { command: 'ban', description: 'Ban người dùng (reply tin nhắn)' },
   // { command: 'kick', description: 'Kick người dùng (reply tin nhắn)' },
   // { command: 'unban', description: 'Unban người dùng (reply tin nhắn)' },
-  { command: 'clear', description: 'Xóa tin nhắn [số lượng]' },
-  { command: 'setapi', description: 'Set API key cho user (chỉ admin)' },
+  // { command: 'clear', description: 'Xóa tin nhắn [số lượng]' },
+  // { command: 'setapi', description: 'Set API key cho user (chỉ admin)' },
   { command: 'key', description: 'Tạo activation key [số ngày|ky]' },
   { command: 'check', description: 'Kiểm tra activation key [key]' },
-  { command: 'statistic', description: 'Lấy thống kê keys [days seller_id]' }
+  // { command: 'statistic', description: 'Lấy thống kê keys [days seller_id]' }
 ]);
 
 // Launch the bot
