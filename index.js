@@ -261,6 +261,27 @@ bot.command('statistic', async (ctx) => {
   }
 });
 
+// Info command
+bot.command('info', async (ctx) => {
+  let userId;
+
+  if (ctx.message.reply_to_message) {
+    userId = ctx.message.reply_to_message.from.id;
+  } else {
+    return ctx.reply('Hãy reply tin nhắn của user để lấy thông tin.', { parse_mode: 'HTML' });
+  }
+
+  try {
+    const member = await ctx.getChatMember(userId);
+    const user = member.user;
+    const info = `<b>Thông tin user:</b>\nID: <code>${user.id}</code>\nUsername: @${user.username || 'không có'}\nTên: ${user.first_name} ${user.last_name || ''}\nTrạng thái: ${member.status}`;
+    await ctx.reply(info, { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error getting user info:', error);
+    await ctx.reply('Không thể lấy thông tin user.', { parse_mode: 'HTML' });
+  }
+});
+
 // Help command
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
@@ -291,6 +312,7 @@ bot.catch((err, ctx) => {
 bot.telegram.setMyCommands([
   { command: 'start', description: 'Khởi động bot' },
   { command: 'help', description: 'Hiển thị trợ giúp' },
+  // { command: 'info', description: 'Lấy thông tin user (reply)' },
   // { command: 'ban', description: 'Ban người dùng (reply tin nhắn)' },
   // { command: 'kick', description: 'Kick người dùng (reply tin nhắn)' },
   // { command: 'unban', description: 'Unban người dùng (reply tin nhắn)' },
