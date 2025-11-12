@@ -35,6 +35,10 @@ class KeyManager {
       note
     );
 
+    if (result.success === false) {
+      throw new Error(result.message || 'Lỗi không xác định khi tạo key');
+    }
+
     return {
       ...result,
       userId,
@@ -49,7 +53,7 @@ class KeyManager {
     const { username, userId, firstName, key_code, keyType, activationDays, key_expiry_date, is_semester, semester_name } = result;
     const maskedKey = key_code ? `${key_code.slice(0, 4)}****${key_code.slice(-4)}` : '****';
 
-    let message = `<b>${firstName}(${userId}) đã tạo key thành công!</b>\n`;
+    let message = `<b>${firstName} (${userId}) đã tạo key thành công!</b>\n`;
     message += `Key: <code>${maskedKey}</code>\n`;
 
     if (keyType === 'day') {
@@ -85,7 +89,11 @@ class KeyManager {
   }
 
   async checkKey(keyCode) {
-    return await this.apiClient.checkActivationKey(keyCode);
+    const result = await this.apiClient.checkActivationKey(keyCode);
+    if (result.success === false) {
+      throw new Error(result.message || 'Lỗi không xác định khi kiểm tra key');
+    }
+    return result;
   }
 
   formatCheckMessage(result) {
@@ -147,7 +155,11 @@ class KeyManager {
   }
 
   async getStatistics(days = 30, sellerId = null) {
-    return await this.apiClient.createStatistics(days, sellerId);
+    const result = await this.apiClient.createStatistics(days, sellerId);
+    if (result.success === false) {
+      throw new Error(result.message || 'Lỗi không xác định khi lấy thống kê');
+    }
+    return result;
   }
 
   formatStatisticsMessage(result) {

@@ -62,7 +62,6 @@ bot.command('ban', async (ctx) => {
     await ctx.banChatMember(userId);
     await ctx.reply('Đã ban người dùng.', { parse_mode: 'HTML' });
   } catch (error) {
-    console.error('Error banning user:', error);
     await ctx.reply('Không thể ban người dùng này.', { parse_mode: 'HTML' });
   }
 });
@@ -82,7 +81,6 @@ bot.command('kick', async (ctx) => {
     await ctx.kickChatMember(userId);
     await ctx.reply('Đã kick người dùng.', { parse_mode: 'HTML' });
   } catch (error) {
-    console.error('Error kicking user:', error);
     await ctx.reply('Không thể kick người dùng này.', { parse_mode: 'HTML' });
   }
 });
@@ -102,7 +100,6 @@ bot.command('unban', async (ctx) => {
     await ctx.unbanChatMember(userId);
     await ctx.reply('Đã unban người dùng.', { parse_mode: 'HTML' });
   } catch (error) {
-    console.error('Error unbanning user:', error);
     await ctx.reply('Không thể unban người dùng này.', { parse_mode: 'HTML' });
   }
 });
@@ -126,7 +123,6 @@ bot.command('clear', async (ctx) => {
       await ctx.deleteMessage(messageId);
       await ctx.deleteMessage(ctx.message.message_id);
     } catch (error) {
-      console.error('Error deleting message:', error);
       await ctx.reply('Không thể xóa tin nhắn này.', { parse_mode: 'HTML' });
     }
     return;
@@ -147,7 +143,6 @@ bot.command('clear', async (ctx) => {
     await ctx.telegram.deleteMessages(ctx.chat.id, messageIds);
     await ctx.deleteMessage(ctx.message.message_id);
   } catch (error) {
-    console.error('Error deleting messages:', error);
     await ctx.reply('Không thể xóa tin nhắn.', { parse_mode: 'HTML' });
   }
 });
@@ -178,7 +173,6 @@ bot.command('key', async (ctx) => {
     await ctx.telegram.sendMessage(userId, userMessage, { parse_mode: 'HTML' });
 
   } catch (error) {
-    console.error('Error creating key:', error);
     await ctx.reply(`Không thể tạo key: ${error.message}`, { parse_mode: 'HTML' });
   }
 });
@@ -212,7 +206,6 @@ bot.command('check', async (ctx) => {
       await ctx.reply(message, { parse_mode: 'HTML', reply_to_message_id: ctx.message.message_id });
     }
   } catch (error) {
-    console.error('Error checking key:', error);
     await ctx.reply(`Không thể kiểm tra key: ${error.message}`, { parse_mode: 'HTML' });
   }
 });
@@ -256,7 +249,6 @@ bot.command('statistic', async (ctx) => {
     const message = keyManager.formatStatisticsMessage(result);
     await ctx.reply(message, { parse_mode: 'HTML' });
   } catch (error) {
-    console.error('Error fetching statistics:', error);
     await ctx.reply(`Không thể lấy thống kê: ${error.message}`, { parse_mode: 'HTML' });
   }
 });
@@ -304,7 +296,6 @@ bot.start((ctx) => {
 
 // Error handling
 bot.catch((err, ctx) => {
-  console.error('Bot error:', err);
   ctx.reply('Có lỗi xảy ra. Vui lòng thử lại sau.', { parse_mode: 'HTML' });
 });
 
