@@ -324,7 +324,14 @@ bot.command('help', (ctx) => {
 
 // Start command
 bot.start((ctx) => {
-  ctx.reply('<b>Bot quản lý nhóm đã sẵn sàng!</b> Sử dụng /help để xem các lệnh.', { parse_mode: 'HTML' });
+  const groupUrl = 'https://t.me/+aGEVtsQDduoyYjVl';
+  const message = `<b>stromez key!</b>\n\nSeller tham gia nhóm và vào support nhắn với admin để được cấp quyền tạo key:`;
+  return ctx.reply(message, {
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: [[{ text: 'Tham gia nhóm', url: groupUrl }]]
+    }
+  });
 });
 
 // Error handling
