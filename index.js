@@ -5,6 +5,11 @@ const KeyManager = require('./modules/keyManager');
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 const keyManager = new KeyManager(process.env.SECRET);
 
+// DNS configuration for Node.js v22+ to fix network timeouts
+// This helps resolve IPv4/IPv6 priority issues on servers
+const { setDefaultResultOrder } = require('node:dns');
+setDefaultResultOrder('ipv6first');
+
 // Middleware to log messages
 bot.use((ctx, next) => {
   if (ctx.message) {
