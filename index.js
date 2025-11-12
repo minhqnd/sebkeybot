@@ -313,10 +313,6 @@ bot.command('statistic', async (ctx) => {
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
 /help - Hiển thị trợ giúp
-/ban - Ban người dùng (reply tin nhắn)
-/kick - Kick người dùng (reply tin nhắn)
-/unban - Unban người dùng (reply tin nhắn)
-/clear [số] - Xóa tin nhắn (reply hoặc số lượng gần nhất)
 /setapi [key] - Set API key cho user (reply tin nhắn, chỉ admin được phép)
 /key [số ngày|ky] - Tạo activation key
 /check [key] - Kiểm tra activation key`, { parse_mode: 'HTML' });

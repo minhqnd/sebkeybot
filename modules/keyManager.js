@@ -92,27 +92,27 @@ class KeyManager {
   formatCheckMessage(result) {
     const { key_code, duration_days, expire_date, activated, expired, is_semester, semester_name, message } = result;
 
-    let response = `🔍 <b>Kiểm tra Key:</b> <code>${key_code}</code>\n\n`;
-
+    let response = `🔍 <b>Kiểm tra Key:</b> <code>${key_code}</code>\n`;
+    response += `${activated ? '<i>Đã được kích hoạt</i>' : '<i>Chưa được kích hoạt</i>'}\n\n`;
+    
     if (duration_days && duration_days > 0) {
-      response += `📅 Thời hạn: ${duration_days} ngày\n`;
+      response += `Key thời hạn: ${duration_days} ngày\n`;
     }
 
     if (expire_date) {
-      response += `⏰ Hết hạn: ${new Date(expire_date).toLocaleDateString('vi-VN')}\n`;
+      response += `Hết hạn vào: ${new Date(expire_date).toLocaleDateString('vi-VN')}\n`;
     }
 
-    response += `✅ Đã kích hoạt: ${activated ? 'Có' : 'Không'}\n`;
 
     if (expired) {
-      response += `❌ Đã hết hạn: Có\n`;
+      response += `❌ Đã hết hạn\n`;
     }
 
     if (semester_name) {
-      response += `📚 Kỳ học: ${semester_name}\n`;
+      response += `Key kỳ: ${semester_name}\n`;
     }
 
-    response += `\n💬 ${message}`;
+    // response += `\n💬 ${message}`;
 
     return response;
   }
