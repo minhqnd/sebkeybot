@@ -41,6 +41,30 @@ class ApiClient {
       throw new Error(error.response?.data?.message || error.message);
     }
   }
+
+  async createStatistics(days = 30, sellerId = null) {
+    const payload = {
+      secret: this.secret,
+      days
+    };
+
+    if (sellerId) {
+      payload.seller_id = sellerId;
+    }
+
+    try {
+      const response = await axios.post(`${this.baseUrl}api/key-statistics`, payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('API statistics request failed:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || error.message);
+    }
+  }
 }
 
 module.exports = ApiClient;

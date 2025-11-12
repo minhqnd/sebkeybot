@@ -116,6 +116,53 @@ class KeyManager {
 
     return response;
   }
+
+  async getStatistics(days = 30, sellerId = null) {
+    return await this.apiClient.createStatistics(days, sellerId);
+  }
+
+  formatStatisticsMessage(result) {
+    // Expecting result to contain fields similar to the example in the request
+    const {
+      success,
+      days,
+      start_date,
+      end_date,
+      total_sellers,
+      overall_stats,
+      seller_stats
+    } = result;
+
+    let msg = `<b>📊 Thống kê keys</b>\n`;
+    msg += `<b>Ngày:</b> ${days || ''} ngày\n`;
+    if (start_date) msg += `<b>Bắt đầu:</b> ${new Date(start_date).toLocaleString('vi-VN')}\n`;
+    if (end_date) msg += `<b>Kết thúc:</b> ${new Date(end_date).toLocaleString('vi-VN')}\n`;
+    msg += `<b>Tổng sellers:</b> ${total_sellers ?? 0}\n\n`;
+
+    if (overall_stats) {
+      msg += `<b>Overall:</b>\n`;
+      msg += `- Tổng keys: ${overall_stats.total_keys ?? 0}\n`;
+      if (overall_stats.day_keys != null) msg += `- Day keys: ${overall_stats.day_keys}\n`;
+      if (overall_stats.semester_keys != null) msg += `- Semester keys: ${overall_stats.semester_keys}\n`;
+      if (overall_stats.activated_keys != null) msg += `- Activated keys: ${overall_stats.activated_keys}\n`;
+      if (overall_stats.unactivated_keys != null) msg += `- Unactivated keys: ${overall_stats.unactivated_keys}\n`;
+      msg += `\n`;
+    }
+
+    if (Array.isArray(seller_stats) && seller_stats.length > 0) {
+      msg += `<b>Per-seller breakdown:</b>\n`;
+      seller_stats.forEach(s => {
+        msg += `<b>Seller:</b> ${s.seller_name || 'Unknown'} (ID: ${(s.seller_id ?? s.id) || 'unknown'}) - Total: ${s.total_keys ?? 0}\n`;
+        if (s.day_keys != null) msg += `  • Day keys: ${s.day_keys}\n`;
+        if (s.semester_keys != null) msg += `  • Semester keys: ${s.semester_keys}\n`;
+        if (s.activated_keys != null) msg += `  • Activated: ${s.activated_keys}\n`;
+        if (s.unactivated_keys != null) msg += `  • Unactivated: ${s.unactivated_keys}\n`;
+        msg += `\n`;
+      });
+    }
+
+    return msg;
+  }
 }
 
 module.exports = KeyManager;

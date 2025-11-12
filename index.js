@@ -123,6 +123,51 @@ bot.command('unban', async (ctx) => {
   }
 });
 
+// Clear message command (admin only)
+bot.command('clear', async (ctx) => {
+  if (!(await isAdmin(ctx))) {
+    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
+  }
+
+  const args = ctx.message.text.split(' ').slice(1);
+
+  if (args.length === 0) {
+    // Nếu không có tham số, reply tin nhắn để xóa
+    const messageId = ctx.message.reply_to_message?.message_id;
+    if (!messageId) {
+      return ctx.reply('Hãy reply tin nhắn cần xóa hoặc chỉ định số lượng. Ví dụ: /clear 5', { parse_mode: 'HTML' });
+    }
+
+    try {
+      await ctx.deleteMessage(messageId);
+      await ctx.deleteMessage(ctx.message.message_id);
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      await ctx.reply('Không thể xóa tin nhắn này.', { parse_mode: 'HTML' });
+    }
+    return;
+  }
+
+  // Có tham số, xóa số tin nhắn gần nhất
+  const count = parseInt(args[0]);
+  if (isNaN(count) || count <= 0 || count > 100) {
+    return ctx.reply('Số lượng không hợp lệ. Tối đa 100.', { parse_mode: 'HTML' });
+  }
+
+  try {
+    const currentMessageId = ctx.message.message_id;
+    const messageIds = [];
+    for (let i = 1; i <= count; i++) {
+      messageIds.push(currentMessageId - i);
+    }
+    await ctx.telegram.deleteMessages(ctx.chat.id, messageIds);
+    await ctx.deleteMessage(ctx.message.message_id);
+  } catch (error) {
+    console.error('Error deleting messages:', error);
+    await ctx.reply('Không thể xóa tin nhắn.', { parse_mode: 'HTML' });
+  }
+});
+
 // Set API key command (authorized admin only)
 bot.command('setapi', async (ctx) => {
   if (!isAuthorizedAdmin(ctx.from.id)) {
@@ -220,6 +265,50 @@ bot.command('check', async (ctx) => {
   }
 });
 
+// Statistic command (authorized admins only)
+bot.command('statistic', async (ctx) => {
+  if (!isAuthorizedAdmin(ctx.from.id)) {
+    return ctx.reply('Bạn không có quyền sử dụng lệnh này.', { parse_mode: 'HTML' });
+  }
+
+  const args = ctx.message.text.split(' ').slice(1);
+
+  if (args.length === 0) {
+    // Gửi tin nhắn riêng với thống kê đầy đủ
+    try {
+      const result = await keyManager.getStatistics(30, null); // Mặc định 30 ngày, tất cả sellers
+      const message = keyManager.formatStatisticsMessage(result);
+      await ctx.telegram.sendMessage(ctx.from.id, message, { parse_mode: 'HTML' });
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      await ctx.telegram.sendMessage(ctx.from.id, `Không thể lấy thống kê: ${error.message}`, { parse_mode: 'HTML' });
+    }
+    return;
+  }
+
+  // Có tham số: /statistic days [sellerId]
+  const days = parseInt(args[0]);
+  const sellerId = args.length > 1 ? parseInt(args[1]) : null;
+
+  if (isNaN(days) || days <= 0) {
+    return ctx.reply('Số ngày không hợp lệ. Ví dụ: /statistic 30 [seller_id]', { parse_mode: 'HTML' });
+  }
+
+  if (sellerId !== null && isNaN(sellerId)) {
+    return ctx.reply('Seller ID không hợp lệ. Ví dụ: /statistic 30 123', { parse_mode: 'HTML' });
+  }
+
+  // Gửi trong group
+  try {
+    const result = await keyManager.getStatistics(days, sellerId);
+    const message = keyManager.formatStatisticsMessage(result);
+    await ctx.reply(message, { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    await ctx.reply(`Không thể lấy thống kê: ${error.message}`, { parse_mode: 'HTML' });
+  }
+});
+
 // Help command
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
@@ -227,6 +316,7 @@ bot.command('help', (ctx) => {
 /ban - Ban người dùng (reply tin nhắn)
 /kick - Kick người dùng (reply tin nhắn)
 /unban - Unban người dùng (reply tin nhắn)
+/clear [số] - Xóa tin nhắn (reply hoặc số lượng gần nhất)
 /setapi [key] - Set API key cho user (reply tin nhắn, chỉ admin được phép)
 /key [số ngày|ky] - Tạo activation key
 /check [key] - Kiểm tra activation key`, { parse_mode: 'HTML' });
@@ -250,9 +340,11 @@ bot.telegram.setMyCommands([
   // { command: 'ban', description: 'Ban người dùng (reply tin nhắn)' },
   // { command: 'kick', description: 'Kick người dùng (reply tin nhắn)' },
   // { command: 'unban', description: 'Unban người dùng (reply tin nhắn)' },
+  { command: 'clear', description: 'Xóa tin nhắn [số lượng]' },
   { command: 'setapi', description: 'Set API key cho user (chỉ admin)' },
   { command: 'key', description: 'Tạo activation key [số ngày|ky]' },
-  { command: 'check', description: 'Kiểm tra activation key [key]' }
+  { command: 'check', description: 'Kiểm tra activation key [key]' },
+  { command: 'statistic', description: 'Lấy thống kê keys [days seller_id]' }
 ]);
 
 // Launch the bot
