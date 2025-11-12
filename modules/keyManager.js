@@ -96,6 +96,34 @@ class KeyManager {
     return result;
   }
 
+  async checkUser(email) {
+    const result = await this.apiClient.checkUser(email);
+    if (result.exist === false) {
+      throw new Error(result.message || 'User not found');
+    }
+    return result;
+  }
+
+  formatCheckUserMessage(result) {
+    const { email, is_active, exist, message, end_date, start_date } = result;
+
+    let response = `🔍 <b>Kiểm tra User:</b> <code>${email}</code>\n\n`;
+
+    if (!exist) {
+      response += `❌ <b>${message}</b>\n`;
+    } else if (is_active) {
+      response += `✅ <b>${message}</b>\n`;
+      if (start_date) response += `Bắt đầu: ${new Date(start_date).toLocaleDateString('vi-VN')}\n`;
+      if (end_date) response += `Kết thúc: ${new Date(end_date).toLocaleDateString('vi-VN')}\n`;
+    } else {
+      response += `⏰ <b>${message}</b>\n`;
+      if (start_date) response += `Bắt đầu: ${new Date(start_date).toLocaleDateString('vi-VN')}\n`;
+      if (end_date) response += `Kết thúc: ${new Date(end_date).toLocaleDateString('vi-VN')}\n`;
+    }
+
+    return response;
+  }
+
   formatCheckMessage(result) {
     const { key_code, duration_days, expire_date, activated, expired, is_semester, semester_name, message } = result;
 

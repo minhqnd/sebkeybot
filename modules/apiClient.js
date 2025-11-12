@@ -42,6 +42,16 @@ class ApiClient {
     }
   }
 
+  async checkUser(email) {
+    try {
+      const response = await axios.get(`${this.baseUrl}auth?email=${encodeURIComponent(email)}&secret=${this.secret}`);
+      return response.data;
+    } catch (error) {
+      console.error('API check user request failed:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || error.message);
+    }
+  }
+
   async createStatistics(days = 30, sellerId = null) {
     const payload = {
       secret: this.secret,

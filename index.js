@@ -178,7 +178,7 @@ bot.command('key', async (ctx) => {
 });
 
 // Check activation key command
-bot.command('check', async (ctx) => {
+bot.command('checkkey', async (ctx) => {
   const args = ctx.message.text.split(' ').slice(1);
   const keyCode = args.join(' ');
 
@@ -207,6 +207,24 @@ bot.command('check', async (ctx) => {
     }
   } catch (error) {
     await ctx.reply(`Không thể kiểm tra key: ${error.message}`, { parse_mode: 'HTML' });
+  }
+});
+
+// Check user command
+bot.command('checkuser', async (ctx) => {
+  const args = ctx.message.text.split(' ').slice(1);
+  const email = args.join(' ').trim();
+
+  if (!email) {
+    return ctx.reply('Hãy cung cấp email để kiểm tra. Ví dụ: /checkuser user@example.com', { parse_mode: 'HTML' });
+  }
+
+  try {
+    const result = await keyManager.checkUser(email);
+    const message = keyManager.formatCheckUserMessage(result);
+    await ctx.reply(message, { parse_mode: 'HTML' });
+  } catch (error) {
+    await ctx.reply(`Không thể kiểm tra user: ${error.message}`, { parse_mode: 'HTML' });
   }
 });
 
@@ -278,8 +296,10 @@ bot.command('info', async (ctx) => {
 bot.command('help', (ctx) => {
   ctx.reply(`<b>Các lệnh có sẵn:</b>
 /help - Hiển thị trợ giúp
+/info - Lấy thông tin user (reply hoặc @yourusername)
 /key [số ngày|ky] - Tạo activation key
-/check [key] - Kiểm tra activation key`, { parse_mode: 'HTML' });
+/checkkey [key] - Kiểm tra activation key
+/checkuser [email] - Kiểm tra user`, { parse_mode: 'HTML' });
 });
 
 // Start command
@@ -309,7 +329,8 @@ bot.telegram.setMyCommands([
   // { command: 'unban', description: 'Unban người dùng (reply tin nhắn)' },
   // { command: 'clear', description: 'Xóa tin nhắn [số lượng]' },
   { command: 'key', description: 'Tạo activation key [số ngày|ky]' },
-  { command: 'check', description: 'Kiểm tra activation key [key]' },
+  { command: 'checkkey', description: 'Kiểm tra activation key [key]' },
+  { command: 'checkuser', description: 'Kiểm tra user [email]' },
   // { command: 'statistic', description: 'Lấy thống kê keys [days seller_id]' }
 ]);
 
