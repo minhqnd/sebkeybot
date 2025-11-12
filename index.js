@@ -230,11 +230,11 @@ bot.command('key', async (ctx) => {
       return ctx.reply('Bạn chưa có API key. Hãy liên hệ admin để set API key.', { parse_mode: 'HTML' });
     }
 
-    const result = await keyManager.createKey(userData.apiKey, userId, username, args);
+    const result = await keyManager.createKey(userData.apiKey, userId, username, args, ctx.from.first_name);
 
     // Send masked key to server
     const serverMessage = keyManager.formatServerMessage(result);
-    await ctx.reply(serverMessage, { parse_mode: 'HTML' });
+    await ctx.reply(serverMessage, { parse_mode: 'HTML', reply_to_message_id: ctx.message.message_id });
 
     // Send full key to user privately
     const userMessage = keyManager.formatUserMessage(result);
@@ -258,7 +258,22 @@ bot.command('check', async (ctx) => {
   try {
     const result = await keyManager.checkKey(keyCode);
     const message = keyManager.formatCheckMessage(result);
-    await ctx.reply(message, { parse_mode: 'HTML' });
+    
+    if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+      // In group: show masked key and delete command message
+      const maskedMessage = keyManager.formatMaskedCheckMessage(result);
+      await ctx.reply(maskedMessage, { parse_mode: 'HTML', reply_to_message_id: ctx.message.message_id });
+      
+      // Delete the command message
+      try {
+        await ctx.deleteMessage(ctx.message.message_id);
+      } catch (deleteError) {
+        console.log('Could not delete message (bot may not have delete permissions):', deleteError.message);
+      }
+    } else {
+      // In private: show full key
+      await ctx.reply(message, { parse_mode: 'HTML', reply_to_message_id: ctx.message.message_id });
+    }
   } catch (error) {
     console.error('Error checking key:', error);
     await ctx.reply(`Không thể kiểm tra key: ${error.message}`, { parse_mode: 'HTML' });

@@ -5,7 +5,7 @@ class KeyManager {
     this.apiClient = new ApiClient(secret);
   }
 
-  async createKey(apiKey, userId, username, args) {
+  async createKey(apiKey, userId, username, args, firstName) {
     const note = `${userId}-${username}`; // Generate email from user ID
 
     let keyType;
@@ -39,16 +39,17 @@ class KeyManager {
       ...result,
       userId,
       username,
+      firstName,
       keyType,
       activationDays
     };
   }
 
   formatServerMessage(result) {
-    const { username, userId, key_code, keyType, activationDays, key_expiry_date, is_semester, semester_name } = result;
+    const { username, userId, firstName, key_code, keyType, activationDays, key_expiry_date, is_semester, semester_name } = result;
     const maskedKey = key_code ? `${key_code.slice(0, 4)}****${key_code.slice(-4)}` : '****';
 
-    let message = `🎉 <b>@${username}</b> (ID: ${userId}) đã tạo key thành công!\n`;
+    let message = `<b>${firstName}(${userId}) đã tạo key thành công!</b>\n`;
     message += `Key: <code>${maskedKey}</code>\n`;
 
     if (keyType === 'day') {
@@ -67,7 +68,7 @@ class KeyManager {
   formatUserMessage(result) {
     const { key_code, keyType, activationDays, key_expiry_date, is_semester, semester_name } = result;
 
-    let message = `🎉 <b>Key của bạn đã được tạo thành công!</b>\n\n`;
+    let message = `<b>Key của bạn đã được tạo thành công!</b>\n\n`;
     message += `<b>Key Code:</b> <code>${key_code}</code>\n`;
 
     if (keyType === 'day') {
@@ -80,8 +81,6 @@ class KeyManager {
       message += `<b>Hết hạn:</b> ${new Date(key_expiry_date).toLocaleDateString('vi-VN')}\n`;
     }
 
-    message += `\n💡 Sử dụng key này để kích hoạt dịch vụ.`;
-
     return message;
   }
 
@@ -92,27 +91,57 @@ class KeyManager {
   formatCheckMessage(result) {
     const { key_code, duration_days, expire_date, activated, expired, is_semester, semester_name, message } = result;
 
-    let response = `🔍 <b>Kiểm tra Key:</b> <code>${key_code}</code>\n`;
-    response += `${activated ? '<i>Đã được kích hoạt</i>' : '<i>Chưa được kích hoạt</i>'}\n\n`;
+    const maskedKey = key_code ? `${key_code.slice(0, 4)}****${key_code.slice(-4)}` : '****';
+
+        let response = `🔍 <b>Kiểm tra Key:</b> <code>${maskedKey}</code>\n`;
     
     if (duration_days && duration_days > 0) {
-      response += `Key thời hạn: ${duration_days} ngày\n`;
+      response += `Key thời hạn: ${duration_days} ngày\n\n`;
     }
-
-    if (expire_date) {
+    
+    if (expire_date && !activated) {
       response += `Hết hạn vào: ${new Date(expire_date).toLocaleDateString('vi-VN')}\n`;
     }
-
-
+    
     if (expired) {
       response += `❌ Đã hết hạn\n`;
     }
 
     if (semester_name) {
-      response += `Key kỳ: ${semester_name}\n`;
+      response += `Key kỳ: ${semester_name}\n\n`;
+    }
+    
+    response += `${activated ? '<i>Đã được kích hoạt</i>' : '<i>Chưa được kích hoạt</i>'}\n`;
+    
+
+    return response;
+  }
+
+  formatMaskedCheckMessage(result) {
+    const { key_code, duration_days, expire_date, activated, expired, is_semester, semester_name, message } = result;
+
+    const maskedKey = key_code ? `${key_code.slice(0, 4)}****${key_code.slice(-4)}` : '****';
+
+    let response = `🔍 <b>Kiểm tra Key:</b> <code>${maskedKey}</code>\n`;
+    
+    if (duration_days && duration_days > 0) {
+      response += `Key thời hạn: ${duration_days} ngày\n\n`;
+    }
+    
+    if (expire_date && !activated) {
+      response += `Hết hạn vào: ${new Date(expire_date).toLocaleDateString('vi-VN')}\n`;
+    }
+    
+    if (expired) {
+      response += `❌ Đã hết hạn\n`;
     }
 
-    // response += `\n💬 ${message}`;
+    if (semester_name) {
+      response += `Key kỳ: ${semester_name}\n\n`;
+    }
+    
+    response += `${activated ? '<i>Đã được kích hoạt</i>' : '<i>Chưa được kích hoạt</i>'}\n`;
+    
 
     return response;
   }
